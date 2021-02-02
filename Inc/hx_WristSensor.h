@@ -45,7 +45,7 @@
 #define WRIST_SENSOR_NUM				2
 
 #define WRIST_SENSOR_MAX_VALUE			4096
-#define LED_RED						GPIO_PIN_12
+#define LED_RED							GPIO_PIN_13
 #define LED_GREEN						GPIO_PIN_14
 //#define LED_ADC_RUN_BLINK 				HAL_GPIO_TogglePin(GPIOB, LED_ORANGE)
 //#define LED_ADC_RUN_OFF 				HAL_GPIO_WritePin(GPIOB, LED_ORANGE, GPIO_PIN_SET)
@@ -58,12 +58,12 @@
 
 #define COMPANY_LENGTH					15
 #define MODEL_LENGTH					10
-#define FW_VER							0x03	//v1.0
-#define HW_VER							0x02	//v0.2(18.04.17)
+#define FW_VER							0x10	//v1.0
+#define HW_VER							0x10	//v0.2(18.04.17)
 #define FW_USER							'H'		//user : hexar
-#define FW_CREATE_YEAR					18
-#define FW_CREATE_MONTH					4
-#define FW_CREATE_DAY					17
+#define FW_CREATE_YEAR					21
+#define FW_CREATE_MONTH					2
+#define FW_CREATE_DAY					2
 #define FW_CREATE_HOUR					9
 #define FW_CREATE_MIN					34
 
@@ -145,8 +145,9 @@ typedef struct tag_WRIST{
 		uint8_t statusOfOverload; //R13 : Status of Overload
 	}FTSensor; //6axis
 	struct {
+		uint16_t *pValue;
 		uint16_t value;
-		uint16_t offset;
+		float offset;
 		uint16_t angle; //x100
 	}Enc[2];
 	struct {
@@ -164,7 +165,8 @@ typedef struct tag_WRIST{
 
 typedef struct tag_INSOL_Timer{
 	uint32_t tick;
-	uint8_t temp;
+	uint16_t tick2;
+	//uint16_t sendDataTick;
 }WRIST_TIMER;
 
 typedef union tag_SYSTEM_STATUS{
@@ -231,6 +233,8 @@ extern void CWrist_Print2Uart_SystemInfo(void);
 extern int CWrist_SaveParamToFlash(char *buf);
 //extern uint8_t Insol_GetSensorONNum(uint32_t data);
 //extern void CWrist_SetBufPtr(uint8_t data_size, uint32_t data);
+extern void CWrist_SetEncValuePtr(uint8_t ch, uint16_t *ptr);
+
 
 #endif //_INSOL_SENSOR_H_
 

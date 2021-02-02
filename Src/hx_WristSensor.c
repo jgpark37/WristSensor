@@ -35,7 +35,7 @@ source
 
 /* Private define ------------------------------------------------------------*/
 #define LED_ADC_RUN_BLINK_TIME					3500
-#define LED_CAN_TX_BLINK_TIME					30
+#define LED_CAN_TX_BLINK_TIME					5
 #define CAN_ERR_RECHECK_TIME					1000
 #define USE_PULLUP								1 		//reduce nois than floating
 
@@ -86,12 +86,6 @@ extern IWDG_HandleTypeDef hiwdg;
 //void (*fnADCDrv_Copy2Buf)(void);
 void (*fnWrist_RunMode)(void);
 
-void CWrist_ReceiveCANData(uint8_t node, unsigned char *buf)
-{
-
-}
-
-
 void CWrist_RunMode_Calibration(void)
 {
 
@@ -105,6 +99,8 @@ void CWrist_RunMode_Standby(void)
 void CWrist_RunMode_Normal(void)
 {
 	//int i;//, j;
+	int16_t temp;
+	float ftemp;
 
   	//if (Wrist.adc.complete == 0) return;
 
@@ -132,7 +128,8 @@ void CWrist_RunMode_Normal(void)
 	if (Wrist.data.outputType&DOT_CAN) {
 		//if (Insol.can.complete > 0) Insol.can.complete--;    
 		//if (Insol.can.complete != 0) return;
-		CCANDrv_SetTxStdID(&TxHeader[1], Wrist.can.txid + Wrist.sendOrder);
+		Wrist.sendOrder = 0;
+		CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid + Wrist.sendOrder);
 
 		CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.FTSensor.Fx.upper;
 		CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.FTSensor.Fx.lower;
@@ -145,21 +142,56 @@ void CWrist_RunMode_Normal(void)
 		CanDrv[CBC_WRIST].tx.cnt = 8;
 		Wrist.can.rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
 		if (!Wrist.can.rv) return;
+
+		Wrist.sendOrder++;
+		CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid + Wrist.sendOrder);
 		
 		CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.FTSensor.Ty.upper;
 		CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.FTSensor.Ty.lower;
 		CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.FTSensor.Tz.upper;
 		CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.FTSensor.Tz.lower;
-		CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.Enc[0].angle>>8;
-		CanDrv[CBC_WRIST].tx.buf[0][5] = (Wrist.Enc[0].angle&0xff);
-		CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.Enc[1].angle>>8;
-		CanDrv[CBC_WRIST].tx.buf[0][7] = (Wrist.Enc[1].angle&0xff);
+		
+		if (*Wrist.Enc[0].pValue > 1024) Wrist.Enc[0].value = 1024;
+		else Wrist.Enc[0].value = *Wrist.Enc[0].pValue;
+		
+		if (Wrist.Enc[0].value < 2) { 
+			Wrist.Enc[0].angle = 0; 
+		}
+		else {
+			ftemp = (float)(Wrist.Enc[0].value)*0.35+1.25;
+			if (ftemp >= Wrist.Enc[0].offset) {
+				Wrist.Enc[0].angle = (uint16_t)((ftemp-Wrist.Enc[0].offset)*100); 
+			}
+			else {
+				Wrist.Enc[0].angle = (uint16_t)((359.65-Wrist.Enc[0].offset+ftemp)*100); 
+			}
+		}
+		
+		if (*Wrist.Enc[1].pValue > 1024) Wrist.Enc[1].value = 1024;
+		else Wrist.Enc[1].value = *Wrist.Enc[1].pValue;
+		
+		if (Wrist.Enc[1].value < 2) { 
+			Wrist.Enc[1].angle = 0; 
+		}
+		else {
+			ftemp = (float)(Wrist.Enc[1].value)*0.35+1.25;
+			if (ftemp >= Wrist.Enc[1].offset) {
+				Wrist.Enc[1].angle = (uint16_t)((ftemp-Wrist.Enc[1].offset)*100); 
+			}
+			else {
+				Wrist.Enc[1].angle = (uint16_t)((359.65-Wrist.Enc[1].offset+ftemp)*100); 
+			}
+		}
+		CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.Enc[0].angle&0xff;
+		CanDrv[CBC_WRIST].tx.buf[0][5] = (Wrist.Enc[0].angle>>8);
+		CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.Enc[1].angle&0xff;
+		CanDrv[CBC_WRIST].tx.buf[0][7] = (Wrist.Enc[1].angle>>8);
 		CanDrv[CBC_WRIST].tx.cnt = 8;
 		Wrist.can.rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
 		if (!Wrist.can.rv) return;
 		
-		Wrist.sendOrder++;
-		if (Wrist.sendOrder > 1) Wrist.sendOrder = 0;
+		//Wrist.sendOrder++;
+		//if (Wrist.sendOrder > 1) Wrist.sendOrder = 0;
 		
 		Wrist.led.canCnt++;
 		if (Wrist.led.canCnt > LED_CAN_TX_BLINK_TIME) {
@@ -180,10 +212,10 @@ void CWrist_RunMode_Normal(void)
 		}
 	}
 
-	if (Wrist.led.adcCnt > LED_ADC_RUN_BLINK_TIME) {
+	//if (Wrist.led.adcCnt > LED_ADC_RUN_BLINK_TIME) {
 		//LED_ADC_RUN_BLINK;
-		Wrist.led.adcCnt = 0;
-	}
+	//	Wrist.led.adcCnt = 0;
+	//}
 
 }
 
@@ -338,6 +370,11 @@ uint8_t Insol_GetSensorONNum(uint32_t data)
 }
 */
 
+void CWrist_SetEncValuePtr(uint8_t ch, uint16_t *ptr)
+{
+	Wrist.Enc[ch].pValue = ptr;
+}
+
 void CWrist_Print2Uart_SystemInfo(void)
 {
 	SYSTEM_INFO *psi;
@@ -378,16 +415,13 @@ void CWrist_Init(void)
 	#else
 	Wrist.data.outputType = DOT_CAN;
 	#endif
+	Wrist.Enc[0].offset = 0;
+	Wrist.Enc[1].offset = 0;
 
-	//Wrist.data.size = DS_12BIT;
-	//Wrist.sensorONPos = 0x001fffff; // all sensor
-	//Wrist.data.shift = 4;	//256 level
-	//if (Wrist.sensorONNum < 9) {
-	//	CanInfo.tx.cnt = Wrist.sensorONNum;
-	//}
-	//else {
-	//	CanInfo.tx.cnt = 8;
-	//}
+	CCANDrv_SetID(CBC_FT1, 0x10);
+	CCANDrv_SetID(CBC_FT2, 0x11);
+	CCANDrv_SetID(CBC_WRIST, CAN_RX_STD_ID);
+	Wrist.can.txid = CAN_TX_STD_ID;
 
 	//LED_ADC_RUN_OFF;
 	LED_CAN_TX_ON;

@@ -105,7 +105,7 @@ extern uint8_t *CCANDrv_ReadFile(uint8_t node, uint8_t cnt);
 //extern int CCANDrv_ReadFile(unsigned int buf_num, uint8_t *buf, uint8_t cnt);
 extern void CCANDrv_SetTxStdID(FDCAN_TxHeaderTypeDef *pheader, uint32_t id);
 extern void CCANDrv_SetIDInsol(uint8_t node, uint16_t txBase, uint16_t rxBase);
-extern void CCANDrv_SetID(uint8_t node, uint16_t txBase, uint16_t rxBase);
+extern void CCANDrv_SetID(uint8_t node, uint32_t id);
 extern void  CCANDrv_ISR(FDCAN_HandleTypeDef *phcan);
 extern void CCANDrv_SetISRFn( void (*fp)(uint8_t node, unsigned char *buf));
 

@@ -300,7 +300,7 @@ void CCANDrv_CAN1Init(void)
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = ENABLE;
 	hfdcan1.Init.NominalPrescaler = 0x1; /* tq = NominalPrescaler x (1/fdcan_ker_ck) */
-	hfdcan1.Init.NominalSyncJumpWidth = 0x10;//0x8;
+	hfdcan1.Init.NominalSyncJumpWidth = 1;//0x10;//0x8;
 	hfdcan1.Init.NominalTimeSeg1 = 0x3F; /* NominalTimeSeg1 = Propagation_segment + Phase_segment_1 */
 	hfdcan1.Init.NominalTimeSeg2 = 0x10;
 	hfdcan1.Init.DataPrescaler = 0x1;
@@ -373,19 +373,19 @@ void CCANDrv_CAN2Init(void)
 	Bit_rate                   | 0.5 MBit/s   | 2 MBit/s
 	*/
 	hfdcan2.Instance = FDCAN2;
-	hfdcan2.Init.FrameFormat = FDCAN_FRAME_FD_BRS;
+	hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
 	hfdcan2.Init.AutoRetransmission = ENABLE;
 	hfdcan2.Init.TransmitPause = DISABLE;
 	hfdcan2.Init.ProtocolException = ENABLE;
 	hfdcan2.Init.NominalPrescaler = 0x1; /* tq = NominalPrescaler x (1/fdcan_ker_ck) */
-	hfdcan2.Init.NominalSyncJumpWidth = 0x8;
-	hfdcan2.Init.NominalTimeSeg1 = 0x3; /* NominalTimeSeg1 = Propagation_segment + Phase_segment_1 */
-	hfdcan2.Init.NominalTimeSeg2 = 0xC;
+	hfdcan2.Init.NominalSyncJumpWidth = 1;//0x8;
+	hfdcan2.Init.NominalTimeSeg1 = 32;//0x3; /* NominalTimeSeg1 = Propagation_segment + Phase_segment_1 */
+	hfdcan2.Init.NominalTimeSeg2 = 52;//0xC;
 	hfdcan2.Init.DataPrescaler = 0x1;
-	hfdcan2.Init.DataSyncJumpWidth = 0x8;
-	hfdcan2.Init.DataTimeSeg1 = 0x2; /* DataTimeSeg1 = Propagation_segment + Phase_segment_1 */
-	hfdcan2.Init.DataTimeSeg2 = 0x1;
+	hfdcan2.Init.DataSyncJumpWidth = 1;//0x8;
+	hfdcan2.Init.DataTimeSeg1 = 32;//0x2; /* DataTimeSeg1 = Propagation_segment + Phase_segment_1 */
+	hfdcan2.Init.DataTimeSeg2 = 52;//0x1;
 //	hfdcan2.Init.MessageRAMOffset = 0;
 	hfdcan2.Init.StdFiltersNbr = 1;
 	hfdcan2.Init.ExtFiltersNbr = 0;
@@ -443,12 +443,13 @@ void CCANDrv_InitHW(uint8_t flag)
 	CCANDrv_CAN2Init();
 }
 
-void CCANDrv_SetID(uint8_t node, uint16_t txBase, uint16_t rxBase)
+void CCANDrv_SetID(uint8_t node, uint32_t id)
 {
-	CanDrv[CBC_FT1+node].rx.head = 0;
-	CanDrv[CBC_FT1+node].rx.tail = 0;
-	CanDrv[CBC_FT1+node].rx.status = 0;
-	CanDrv[CBC_FT1+node].tx.bus = CAN_BUS_NUM[node];
+	CanDrv[node].rx.head = 0;
+	CanDrv[node].rx.tail = 0;
+	CanDrv[node].rx.status = 0;
+	CanDrv[node].rx.id = id;
+	CanDrv[node].tx.bus = CAN_BUS_NUM[node];
 }
 
 void CCANDrv_NullProcess(uint8_t node, unsigned char *buf)
@@ -469,6 +470,6 @@ void CCANDrv_CANDrv(void)
 	}
 	CCANDrv_SetISRFn(CCANDrv_NullProcess);
 	CCANDrv_InitHW(0);
-	//CCANDrv_InitHW(1);
+	CCANDrv_InitHW(1);
 }
 

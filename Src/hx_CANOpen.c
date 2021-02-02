@@ -62,6 +62,7 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 {
 	uint8_t buf[5];
 	uint8_t cnt;
+	float ftemp;
 
 	cnt = 0;
 
@@ -76,22 +77,25 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		else {
 		}
 		break;
-	//case CAN_OPEN_SWITCH_OFF:
-	//	break;
+	case CAN_OPEN_DISABLE_OPERATION:
+		CWrist_SetRunMode(RM_STANDBY);
+		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
+		buf[cnt++] = (uint8_t)CAN_OPEN_DISABLE_OPERATION;
+		buf[cnt++] = 0;
+		//cnt = 5;
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
+		break;
 	case CAN_OPEN_ENABLE_OPERATION:
-		if (pCoc->data[0] == 1) {
-			CWrist_SetRunMode(RM_NORMAL);
-		}
-		else {
-			CWrist_SetRunMode(RM_STANDBY);
-		}
+		CWrist_SetRunMode(RM_NORMAL);
 		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_ENABLE_OPERATION;
-		buf[cnt++] = pCoc->data[0];
+		buf[cnt++] = 0;
 		//cnt = 5;
-		CCANDrv_WriteFile(CBC_WRIST, buf, cnt);
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_FAULT_RESET:
 		if (pCoc->data[0] == 1) {
@@ -101,14 +105,14 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		break;
 	case CAN_OPEN_SET_INTERVAL_SEND_DATA:
 		Wrist.data.sendTime = (pCoc->data[1]<<8) | pCoc->data[0];
-		if (Wrist.data.sendTime < 1) Wrist.data.sendTime = 6;
+		if (Wrist.data.sendTime < 1) Wrist.data.sendTime = 5;
 		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_SET_INTERVAL_SEND_DATA;
 		buf[cnt++] = 0;
 		//cnt = 5;
-		CCANDrv_WriteFile(CBC_WRIST, buf, cnt);
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_RUN_CALIBRATION:
 		CWrist_RunMode_Calibration();
@@ -118,7 +122,7 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		buf[cnt++] = (uint8_t)CAN_OPEN_RUN_CALIBRATION;
 		buf[cnt++] = 0;
 		//cnt = 5;
-		CCANDrv_WriteFile(0, buf, cnt);
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_SET_DEVICE_NUM:
 		Wrist.can.txid = CAN_TX_STD_ID + pCoc->data[0];
@@ -130,7 +134,7 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		if (CWrist_SaveParamToFlash(CommonBuf)) buf[cnt++] = 0;
 		else buf[cnt++] = 1;
 		//cnt = 5;
-		CCANDrv_WriteFile(CBC_WRIST, buf, cnt);
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_SET_DATA_OUTPUT_TYPE:
 		Wrist.data.outputType = pCoc->data[0];
@@ -140,7 +144,7 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		buf[cnt++] = (uint8_t)CAN_OPEN_SET_DATA_OUTPUT_TYPE;
 		buf[cnt++] = 0;
 		//cnt = 5;
-		CCANDrv_WriteFile(CBC_WRIST, buf, cnt);
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_SET_DATA_SIZE:
 		//Wrist.data.size = pCoc->data[0];
@@ -154,7 +158,20 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		buf[cnt++] = (uint8_t)CAN_OPEN_SET_DATA_SIZE;
 		buf[cnt++] = 0;
 		//cnt = 5;
-		CCANDrv_WriteFile(CBC_WRIST, buf, cnt);
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
+		break;
+	case CAN_OPEN_GET_INFORMATION:
+		buf[cnt++] = FW_VER;
+		buf[cnt++] = HW_VER;
+		buf[cnt++] = FW_USER;
+		buf[cnt++] = WMN_SELF;
+		buf[cnt++] = FW_CREATE_YEAR;
+		buf[cnt++] = FW_CREATE_MONTH;
+		buf[cnt++] = FW_CREATE_DAY;
+		buf[cnt++] = FW_CREATE_HOUR;
+		//buf[cnt++] = FW_CREATE_MIN;
+		//cnt = 8;
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	default:
 		break;
@@ -169,19 +186,6 @@ void CANOpen_Status(uint8_t node, CanOpenCommand *pCoc)
 	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid);
  	cnt = 0;
 	switch (pCoc->m_subinx) {
-	case CAN_OPEN_GET_INFORMATION:
-		buf[cnt++] = FW_VER;
-		buf[cnt++] = HW_VER;
-		buf[cnt++] = FW_USER;
-		buf[cnt++] = WMN_SELF;
-		buf[cnt++] = FW_CREATE_YEAR;
-		buf[cnt++] = FW_CREATE_MONTH;
-		buf[cnt++] = FW_CREATE_DAY;
-		buf[cnt++] = FW_CREATE_HOUR;
-		//buf[cnt++] = FW_CREATE_MIN;
-		//cnt = 8;
-		CCANDrv_WriteFile(CBC_WRIST, buf, cnt);
-		break;
 	case CAN_OPEN_GET_STATUS:
 		break;
 	default:
@@ -190,9 +194,43 @@ void CANOpen_Status(uint8_t node, CanOpenCommand *pCoc)
 	
 }
 
-void CANOpen_Ack(uint8_t node, CanOpenCommand *pCoc)
-{
+//void CANOpen_Ack(uint8_t node, CanOpenCommand *pCoc)
+//{
 	
+//}
+
+void CANOpen_Etc(uint8_t node, CanOpenCommand *pCoc)
+{
+	uint8_t buf[5];
+	uint8_t cnt;
+	float ftemp;
+
+	cnt = 0;
+
+	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid);
+	
+	switch (pCoc->m_inx) {
+	case CIA_402_POSITION_OFFSET:
+		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
+		buf[cnt++] = (uint8_t)CAN_OPEN_SET_DATA_OUTPUT_TYPE;
+		if (pCoc->m_subinx < 2) {
+			if (*Wrist.Enc[pCoc->m_subinx].pValue > 1024) Wrist.Enc[pCoc->m_subinx].value = 1024;
+			else Wrist.Enc[pCoc->m_subinx].value = *Wrist.Enc[pCoc->m_subinx].pValue;
+			ftemp = ((pCoc->data[1]<<8)+pCoc->data[0])/100.0;
+			Wrist.Enc[pCoc->m_subinx].offset = (((float)(Wrist.Enc[pCoc->m_subinx].value))*0.35+1.25) - ftemp;			
+			buf[cnt++] = 0;
+		}
+		else {
+			buf[cnt++] = 1;
+		}
+		//cnt = 5;
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
+		break;
+	default:
+		break;
+	}
 }
 
 void CANOpen_ProcessSdo(uint8_t node, unsigned char *buf)
@@ -230,7 +268,8 @@ void CANOpen_ProcessSdo(uint8_t node, unsigned char *buf)
 			CANOpen_Status(node, pCoc);
 		}
 		else {
-			CANOpen_Ack(node, pCoc);
+			//CANOpen_Ack(node, pCoc);
+			CANOpen_Etc(node, pCoc);
 		}
 		//CanDrv[i].rx.tail++;
 		//if (CanDrv[i].rx.tail >= CAN_RX_BUF_NUM) 

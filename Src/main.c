@@ -71,22 +71,22 @@ DMA_HandleTypeDef hdma_usart1_rx;
 /* USER CODE BEGIN PV */
 //FDCAN_RxHeaderTypeDef RxHeader[2];
 //uint8_t RxData[2][16];
-FDCAN_TxHeaderTypeDef TxHeader[2];
+//FDCAN_TxHeaderTypeDef TxHeader[2];
 //uint8_t TxData[2][16];
 //uint8_t TxData2[] = {0x10, 0x32, 0x54, 0x76, 0x98, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00};
 //FDCAN_FilterTypeDef sFilterConfig;
 //int fifo0TxNum;
 uint16_t adc1Result[ADC1_CHANNEL_NUM];
 uint8_t DMA_RX_Buffer[1];
-uint16_t capture1[2];
-uint16_t capture2[2];
-uint16_t capture3[2];
-uint16_t capture4[2];
-uint32_t period, active, freq, duty;
-uint8_t ch1done = 0;
-uint8_t ch2done = 0;
-uint8_t ch3done = 0;
-uint8_t ch4done = 0;
+uint16_t capture21[2];	//tim2_1ch
+uint16_t capture22[2];	//tim2_2ch
+uint16_t capture81[2];
+uint16_t capture82[2];
+//uint32_t period, active, freq, duty;
+//uint8_t ch1done = 0;
+//uint8_t ch2done = 0;
+//uint8_t ch3done = 0;
+//uint8_t ch4done = 0;
 
 
 /* USER CODE END PV */
@@ -125,7 +125,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 {
 	if (htim->Instance == TIM7) {
 		WristTimer.tick++;
+		WristTimer.tick2++;
 		//WristTimer.temp++;
+		//if (WristTimer.sendDataTick > 0) WristTimer.sendDataTick--;
 	}
 }
 
@@ -160,18 +162,18 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   */
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
-	uint32_t len;
-	int i;
+	//uint32_t len;
+	//int i;
 	
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET)
 	{
 		if (hfdcan->Instance == FDCAN1) {
-			//CCANDrv_ISR(hfdcan);
+			CCANDrv_ISR(hfdcan);
 			/* Activate Rx FIFO 0 watermark notification */
 			HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, CanBuf[0].fifo0TxNum);
 		}
 		else if (hfdcan->Instance == FDCAN2) {
-			//CCANDrv_ISR(hfdcan);
+			CCANDrv_ISR(hfdcan);
 			/* Activate Rx FIFO 0 watermark notification */
 			HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, CanBuf[1].fifo0TxNum);
 		}
@@ -229,25 +231,24 @@ void HW_DeviceDrv_Init(void)
 	//HAL_NVIC_SetPriority(EXTI2_IRQn, 8, 0); //emg1
 	//HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-//	HAL_UART_Receive_DMA(&huart1, &DMA_RX_Buffer[0], DMA_RX_BUFFER_SIZE);
+	HAL_UART_Receive_DMA(&huart1, &DMA_RX_Buffer[0], DMA_RX_BUFFER_SIZE);
 
-//	CCANDrv_CANDrv();
+	CCANDrv_CANDrv();
 
 	HAL_TIM_Base_Start_IT(&htim7);
-	//HAL_TIM_Base_Start_IT(&htim8);
-	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)capture1, 2);
+	
+	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)capture21, 2);
 	htim2.State = HAL_TIM_STATE_READY;
-	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_2, (uint32_t *)capture2, 2);
+	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_2, (uint32_t *)capture22, 2);
 	
-	HAL_TIM_IC_Start_DMA(&htim8, TIM_CHANNEL_1, (uint32_t *)capture3, 2);
+	HAL_TIM_IC_Start_DMA(&htim8, TIM_CHANNEL_1, (uint32_t *)capture81, 2);
 	htim8.State = HAL_TIM_STATE_READY;
-	HAL_TIM_IC_Start_DMA(&htim8, TIM_CHANNEL_2, (uint32_t *)capture4, 2);
+	HAL_TIM_IC_Start_DMA(&htim8, TIM_CHANNEL_2, (uint32_t *)capture82, 2);
 	
-//	HAL_TIM_Base_Start(&htim6);  // Timer 6 Base generation : for adc1,2,3 trigger
-	//HAL_TIM_Base_Start_IT(&htim7);  // Timer 7 Base generation : for can receive data wait time
+	HAL_TIM_Base_Start(&htim6);  // Timer 6 Base generation : for adc1,2,3 trigger
 
 	//ADCDrv_Init();
-//	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc1Result, ADC1_CHANNEL_NUM);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc1Result, ADC1_CHANNEL_NUM);
 //	HAL_IWDG_Start(&hiwdg);
 	
 }
@@ -313,7 +314,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HW_DeviceDrv_Init();
   //  HAL_IWDG_Start(&hiwdg);
-//  CWrist_Init();
+  CWrist_Init();
+  CWrist_SetEncValuePtr(0, &capture22[0]);
+  CWrist_SetEncValuePtr(1, &capture82[0]);
   //CWrist_RunMode_Calibration();
   //#ifdef SUPPORT_UART_PRINT
   //CWrist_SetRunMode(RM_STANDBY);
@@ -363,10 +366,11 @@ int main(void)
 	} 
 #endif
 
-	//fnWrist_RunMode();
-	if (WristTimer.tick > 100) {
-		LED_GREEN_TOGGLE;
-		WristTimer.tick = 0;
+	fnWrist_RunMode();
+	//if (Wrist.runMode > )
+	if (WristTimer.tick2 > 100) {
+		LED_RED_TOGGLE;
+		WristTimer.tick2 = 0;
 	}
   
   }
@@ -530,7 +534,7 @@ static void MX_FDCAN1_Init(void)
   hfdcan1.Init.DataPrescaler = 1;
   hfdcan1.Init.DataSyncJumpWidth = 1;
   hfdcan1.Init.DataTimeSeg1 = 32;
-  hfdcan1.Init.DataTimeSeg2 = 1;
+  hfdcan1.Init.DataTimeSeg2 = 52;
   hfdcan1.Init.StdFiltersNbr = 0;
   hfdcan1.Init.ExtFiltersNbr = 0;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
@@ -572,7 +576,7 @@ static void MX_FDCAN2_Init(void)
   hfdcan2.Init.DataPrescaler = 1;
   hfdcan2.Init.DataSyncJumpWidth = 1;
   hfdcan2.Init.DataTimeSeg1 = 32;
-  hfdcan2.Init.DataTimeSeg2 = 1;
+  hfdcan2.Init.DataTimeSeg2 = 52;
   hfdcan2.Init.StdFiltersNbr = 0;
   hfdcan2.Init.ExtFiltersNbr = 0;
   hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
