@@ -378,14 +378,14 @@ void CCANDrv_CAN2Init(void)
 	hfdcan2.Init.AutoRetransmission = ENABLE;
 	hfdcan2.Init.TransmitPause = DISABLE;
 	hfdcan2.Init.ProtocolException = ENABLE;
-	hfdcan2.Init.NominalPrescaler = 0x1; /* tq = NominalPrescaler x (1/fdcan_ker_ck) */
+	hfdcan2.Init.NominalPrescaler = 10;//0x1; /* tq = NominalPrescaler x (1/fdcan_ker_ck) */
 	hfdcan2.Init.NominalSyncJumpWidth = 1;//0x8;
-	hfdcan2.Init.NominalTimeSeg1 = 32;//0x3; /* NominalTimeSeg1 = Propagation_segment + Phase_segment_1 */
-	hfdcan2.Init.NominalTimeSeg2 = 52;//0xC;
-	hfdcan2.Init.DataPrescaler = 0x1;
+	hfdcan2.Init.NominalTimeSeg1 = 14;//32;//0x3; /* NominalTimeSeg1 = Propagation_segment + Phase_segment_1 */
+	hfdcan2.Init.NominalTimeSeg2 = 2;//9;//52;//0xC;
+	hfdcan2.Init.DataPrescaler = 10;//2;//0x1;
 	hfdcan2.Init.DataSyncJumpWidth = 1;//0x8;
-	hfdcan2.Init.DataTimeSeg1 = 32;//0x2; /* DataTimeSeg1 = Propagation_segment + Phase_segment_1 */
-	hfdcan2.Init.DataTimeSeg2 = 52;//0x1;
+	hfdcan2.Init.DataTimeSeg1 = 14;//32;//0x2; /* DataTimeSeg1 = Propagation_segment + Phase_segment_1 */
+	hfdcan2.Init.DataTimeSeg2 = 2;//9;//52;//0x1;
 //	hfdcan2.Init.MessageRAMOffset = 0;
 	hfdcan2.Init.StdFiltersNbr = 1;
 	hfdcan2.Init.ExtFiltersNbr = 0;
@@ -470,6 +470,5 @@ void CCANDrv_CANDrv(void)
 	}
 	CCANDrv_SetISRFn(CCANDrv_NullProcess);
 	CCANDrv_InitHW(0);
-	CCANDrv_InitHW(1);
 }
 

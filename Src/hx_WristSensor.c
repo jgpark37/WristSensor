@@ -105,7 +105,7 @@ void CWrist_RunMode_Normal(void)
   	//if (Wrist.adc.complete == 0) return;
 
 	if (WristTimer.tick < Wrist.data.sendTime) return;
-	
+#if 0	
 	if (Wrist.data.outputType&DOT_UART) {
 		//if (!Insol.sendOrder) 
 		{
@@ -122,7 +122,7 @@ void CWrist_RunMode_Normal(void)
 		}
 		WristTimer.tick = 0;
 	}
-
+#endif
 	
 	Wrist.can.rv = 0;
 	if (Wrist.data.outputType&DOT_CAN) {
@@ -142,7 +142,7 @@ void CWrist_RunMode_Normal(void)
 		CanDrv[CBC_WRIST].tx.cnt = 8;
 		Wrist.can.rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
 		if (!Wrist.can.rv) return;
-
+#if 1
 		Wrist.sendOrder++;
 		CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid + Wrist.sendOrder);
 		
@@ -189,7 +189,7 @@ void CWrist_RunMode_Normal(void)
 		CanDrv[CBC_WRIST].tx.cnt = 8;
 		Wrist.can.rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
 		if (!Wrist.can.rv) return;
-		
+#endif		
 		//Wrist.sendOrder++;
 		//if (Wrist.sendOrder > 1) Wrist.sendOrder = 0;
 		
@@ -400,12 +400,12 @@ void CWrist_Init(void)
 	//int i;
 	
 	//LED_ADC_RUN_BLINK;
-	LED_CAN_TX_BLINK;
+	//LED_CAN_TX_BLINK;
 
 	Wrist.sendOrder = 0;
 	Wrist.led.adcCnt = 0;
 	Wrist.led.canCnt = 0;
-	Wrist.data.sendTime = 10;
+	Wrist.data.sendTime = 20;
 	Wrist.data.sendTimeBackup = 0;
 	fnWrist_RunMode = CWrist_RunMode_Standby;
 	CCANDrv_SetISRFn(CANOpen_ProcessSdo);
@@ -424,7 +424,7 @@ void CWrist_Init(void)
 	Wrist.can.txid = CAN_TX_STD_ID;
 
 	//LED_ADC_RUN_OFF;
-	LED_CAN_TX_ON;
+	LED_CAN_TX_OFF;
 	
 #ifdef SUPPORT_MCU_FLASH
 	FlashDrv_SetTempBuf(&CommonBuf[FLASH_PAGE_SIZE1]);

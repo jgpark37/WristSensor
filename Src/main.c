@@ -314,6 +314,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HW_DeviceDrv_Init();
   //  HAL_IWDG_Start(&hiwdg);
+
   CWrist_Init();
   CWrist_SetEncValuePtr(0, &capture22[0]);
   CWrist_SetEncValuePtr(1, &capture82[0]);
@@ -368,7 +369,7 @@ int main(void)
 
 	fnWrist_RunMode();
 	//if (Wrist.runMode > )
-	if (WristTimer.tick2 > 100) {
+	if (WristTimer.tick2 > 500) {
 		LED_RED_TOGGLE;
 		WristTimer.tick2 = 0;
 	}
@@ -521,7 +522,7 @@ static void MX_FDCAN1_Init(void)
 
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
-  hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV2;
+  hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV1;//2;
   hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
   hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
