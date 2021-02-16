@@ -38,12 +38,12 @@
 //***********************************************
 
 //===========================================================================================================
-#define SID_T_WRIST_BASE		0x621
-#define SID_R_WRIST_BASE		0x5A1
+#define SID_R_WRIST_BASE		0x621
+#define SID_T_WRIST_BASE		0x5A1
 #define WRIST1_NODE				0
 
-#define SID_T_FT_BASE			0x0A
-#define SID_R_FT_BASE			0x64
+#define SID_R_FT_BASE			0x10
+#define SID_T_FT_BASE			0x64
 #define FT1_NODE0				0
 #define FT1_NODE1				1
 

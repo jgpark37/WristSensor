@@ -30,17 +30,18 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
+#include "Utilities.h"
 
 /* Private define ------------------------------------------------------------*/
 //#define RIGHT_SIDE					
-#define CAN_RX_STD_ID				0x621
-#define CAN_TX_STD_ID				0x5A1
-#define CAN_INSOL_SENSOR1		(CAN_TX_STD_ID+1)
-#define CAN_INSOL_SENSOR2		(CAN_INSOL_SENSOR1+1)
-#define CAN_INSOL_SENSOR3		(CAN_INSOL_SENSOR2+1)
-#define CAN_INSOL_SENSOR4		(CAN_INSOL_SENSOR3+1)
-#define CAN_INSOL_SENSOR5		(CAN_INSOL_SENSOR4+1)
-#define CAN_INSOL_SENSOR6		(CAN_INSOL_SENSOR5+1)
+//#define CAN_RX_STD_ID				0x925//0x621
+//#define CAN_TX_STD_ID				0x935//0x5A1
+//#define CAN_INSOL_SENSOR1		(CAN_TX_STD_ID+1)
+//#define CAN_INSOL_SENSOR2		(CAN_INSOL_SENSOR1+1)
+//#define CAN_INSOL_SENSOR3		(CAN_INSOL_SENSOR2+1)
+//#define CAN_INSOL_SENSOR4		(CAN_INSOL_SENSOR3+1)
+//#define CAN_INSOL_SENSOR5		(CAN_INSOL_SENSOR4+1)
+//#define CAN_INSOL_SENSOR6		(CAN_INSOL_SENSOR5+1)
 
 
 /* Private typedef -----------------------------------------------------------*/

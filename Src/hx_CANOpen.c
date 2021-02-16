@@ -35,7 +35,6 @@ source
 #include "hx_mcuFlash.h"
 #include "CanOpenDef.h"
 
-
 /* Private define ------------------------------------------------------------*/
 
 //=========================================================
@@ -125,8 +124,8 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_SET_DEVICE_NUM:
-		Wrist.can.txid = CAN_TX_STD_ID + pCoc->data[0];
-		Wrist.can.rxid = CAN_RX_STD_ID + pCoc->data[0];
+		Wrist.can.txid = SID_T_WRIST + pCoc->data[0];
+		Wrist.can.rxid = SID_R_WRIST + pCoc->data[0];
 		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;;
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);

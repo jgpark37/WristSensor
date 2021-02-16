@@ -122,13 +122,13 @@ void CCANDrv_ISR(FDCAN_HandleTypeDef *phcan)
 		
 	if (CanBuf[0].rxHeader.IdType == FDCAN_STANDARD_ID) {
 		switch (CanBuf[0].rxHeader.Identifier) {
-			case SID_T_WRIST:
+			case SID_R_WRIST:
 				buf_pos = CBC_WRIST;
 				break;
-			case SID_T_FT1:
+			case SID_R_FT1:
 				buf_pos = CBC_FT1;
 				break;
-			case SID_T_FT2:
+			case SID_R_FT2:
 				buf_pos = CBC_FT2;
 				break;
 			default:

@@ -405,7 +405,7 @@ void CWrist_Init(void)
 	Wrist.sendOrder = 0;
 	Wrist.led.adcCnt = 0;
 	Wrist.led.canCnt = 0;
-	Wrist.data.sendTime = 20;
+	Wrist.data.sendTime = 21;
 	Wrist.data.sendTimeBackup = 0;
 	fnWrist_RunMode = CWrist_RunMode_Standby;
 	CCANDrv_SetISRFn(CANOpen_ProcessSdo);
@@ -418,10 +418,10 @@ void CWrist_Init(void)
 	Wrist.Enc[0].offset = 0;
 	Wrist.Enc[1].offset = 0;
 
-	CCANDrv_SetID(CBC_FT1, 0x10);
-	CCANDrv_SetID(CBC_FT2, 0x11);
-	CCANDrv_SetID(CBC_WRIST, CAN_RX_STD_ID);
-	Wrist.can.txid = CAN_TX_STD_ID;
+	CCANDrv_SetID(CBC_FT1, SID_R_FT1);
+	CCANDrv_SetID(CBC_FT2, SID_R_FT2);
+	CCANDrv_SetID(CBC_WRIST, SID_R_WRIST);
+	Wrist.can.txid = SID_T_WRIST;
 
 	//LED_ADC_RUN_OFF;
 	LED_CAN_TX_OFF;
