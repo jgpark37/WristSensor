@@ -94,64 +94,78 @@ enum eSSYTEM_STATUS_MCU {
 /* Private typedef -----------------------------------------------------------*/
 typedef struct tag_WRIST{
 	//uint8_t sourcePos;
-	uint8_t sendOrder;
+	uint8_t m_sendOrder;
 	//uint16_t sensorValueBuf[WRIST_SENSOR_NUM];
 	struct {
 		uint8_t complete;
 		uint8_t cnt;
-	}adc;
+	}m_adc;
 	struct {
 		uint16_t adcCnt;
 		uint16_t canCnt;
-	}led;
-	uint8_t runMode;
-	uint8_t oldRunMode;
+	}m_led;
+	uint8_t m_runMode;
+	uint8_t m_oldRunMode;
 	struct {
 		uint16_t sendTime;
 		uint16_t sendTimeBackup;
 		uint8_t outputType;
-	}data;
+	}m_data;
 	struct {
 		union {
 			int16_t all;
-			uint8_t upper;
-			uint8_t lower;
+			struct {
+				unsigned short lower	:8;
+				unsigned short upper 	:8;
+			}b;
 		}Fx;
 		union {
 			int16_t all;
-			uint8_t upper;
-			uint8_t lower;
+			struct {
+				unsigned short lower	:8;
+				unsigned short upper 	:8;
+			}b;
 		}Fy;
 		union {
 			int16_t all;
-			uint8_t upper;
-			uint8_t lower;
+			struct {
+				unsigned short lower	:8;
+				unsigned short upper 	:8;
+			}b;
 		}Fz;
 		union {
 			int16_t all;
-			uint8_t upper;
-			uint8_t lower;
+			struct {
+				unsigned short lower	:8;
+				unsigned short upper 	:8;
+			}b;
 		}Tx;
 		union {
 			int16_t all;
-			uint8_t upper;
-			uint8_t lower;
+			struct {
+				unsigned short lower	:8;
+				unsigned short upper 	:8;
+			}b;
 		}Ty;
 		union {
 			int16_t all;
-			uint8_t upper;
-			uint8_t lower;
+			struct {
+				unsigned short lower	:8;
+				unsigned short upper 	:8;
+			}b;
 		}Tz;
-
-		//uint8_t upperTx;
-		uint8_t statusOfOverload; //R13 : Status of Overload
-	}FTSensor; //6axis
+		//uint8_t statusOfOverload; //R13 : Status of Overload	
+		uint8_t tmpSaveTorqueUpperData;
+		uint8_t fReceiveDataMark;
+		float forceDivider;
+		float torqueDivider;
+	}m_RFT; //6axis
 	struct {
 		uint16_t *pValue;
 		uint16_t value;
 		float offset;
 		uint16_t angle; //x100
-	}Enc[2];
+	}m_Enc[2];
 	struct {
 		uint32_t rxid;
 		uint32_t txid;
@@ -159,10 +173,18 @@ typedef struct tag_WRIST{
 		int rv;
 		uint8_t timeout;
 		uint32_t complete;
-	}can;
+	}m_can[2];
 	struct {
 		uint8_t ok;
-	}cal;
+	}m_cal;
+	union {
+		uint16_t all;
+		struct {
+			unsigned short encError		:1;
+			unsigned short rftOverload	:1;
+			unsigned short reserved 	:14;
+		}b;
+	}m_systemInfo;
 }WRIST;
 
 typedef struct tag_INSOL_Timer{
@@ -229,13 +251,15 @@ extern void (*fnWrist_RunMode)(void);
 extern void CWrist_Init();
 extern void CWrist_RunMode_Calibration(void);
 //extern void Insol_RunMode_Standby(void);
-//extern void Insol_RunMode_Normal(void);
+extern void CWrist_RunMode_Normal(void);
 extern void CWrist_SetRunMode(uint8_t runmode);
 extern void CWrist_Print2Uart_SystemInfo(void);
 extern int CWrist_SaveParamToFlash(char *buf);
 //extern uint8_t Insol_GetSensorONNum(uint32_t data);
 //extern void CWrist_SetBufPtr(uint8_t data_size, uint32_t data);
 extern void CWrist_SetEncValuePtr(uint8_t ch, uint16_t *ptr);
+extern void CWrist_FT_StartDataOutput(void);
+extern void CWrist_FT_SetBias(uint8_t is_on);
 
 
 #endif //_INSOL_SENSOR_H_

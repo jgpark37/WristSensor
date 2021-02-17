@@ -42,7 +42,7 @@
 #define SID_T_WRIST_BASE		0x5A1
 #define WRIST1_NODE				0
 
-#define SID_R_FT_BASE			0x10
+#define SID_R_FT_BASE			0x01
 #define SID_T_FT_BASE			0x64
 #define FT1_NODE0				0
 #define FT1_NODE1				1
@@ -50,9 +50,8 @@
 #define SID_T_WRIST				( SID_T_WRIST_BASE ) + ( WRIST1_NODE )
 #define SID_R_WRIST				( SID_R_WRIST_BASE ) + ( WRIST1_NODE )
 
-#define SID_T_FT1				( SID_T_FT_BASE ) + ( FT1_NODE0 )
+#define SID_T_FT				( SID_T_FT_BASE ) + ( FT1_NODE0 )
 #define SID_R_FT1				( SID_R_FT_BASE ) + ( FT1_NODE0 )
-#define SID_T_FT2				( SID_T_FT_BASE ) + ( FT1_NODE1 )
 #define SID_R_FT2				( SID_R_FT_BASE ) + ( FT1_NODE1 )
 
 

@@ -32,6 +32,7 @@ source
 #include "hx_CANDrv.h"
 #include "hx_mcuFlash.h"
 #include "hx_CANOpen.h"
+#include "RFT_IF_PACKET_Rev1.2.h"
 
 /* Private define ------------------------------------------------------------*/
 #define LED_ADC_RUN_BLINK_TIME					3500
@@ -98,13 +99,13 @@ void CWrist_RunMode_Standby(void)
 
 void CWrist_RunMode_Normal(void)
 {
-	//int i;//, j;
-	int16_t temp;
+	int i;//, j;
+	//int16_t temp;
 	float ftemp;
 
   	//if (Wrist.adc.complete == 0) return;
 
-	if (WristTimer.tick < Wrist.data.sendTime) return;
+	if (WristTimer.tick < Wrist.m_data.sendTime) return;
 #if 0	
 	if (Wrist.data.outputType&DOT_UART) {
 		//if (!Insol.sendOrder) 
@@ -124,91 +125,103 @@ void CWrist_RunMode_Normal(void)
 	}
 #endif
 	
-	Wrist.can.rv = 0;
-	if (Wrist.data.outputType&DOT_CAN) {
+	Wrist.m_can[0].rv = 0;
+	if (Wrist.m_data.outputType&DOT_CAN) {
 		//if (Insol.can.complete > 0) Insol.can.complete--;    
 		//if (Insol.can.complete != 0) return;
-		Wrist.sendOrder = 0;
-		CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid + Wrist.sendOrder);
+		Wrist.m_sendOrder = 0;
+		CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.m_can[1].txid + Wrist.m_sendOrder);
+	
+		if (Wrist.m_systemInfo.all) {
+			CanDrv[CBC_WRIST].tx.buf[0][0] = 0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][1] = 0x7f;
+			CanDrv[CBC_WRIST].tx.buf[0][2] = 0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][3] = 0x7f;
+			CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.m_systemInfo.all&0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][5] = Wrist.m_systemInfo.all>>8;
+			CanDrv[CBC_WRIST].tx.buf[0][6] = 0;
+			CanDrv[CBC_WRIST].tx.buf[0][7] = 0;
+		}
+		else {
+			CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.m_RFT.Fx.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.m_RFT.Fx.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.m_RFT.Fy.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.m_RFT.Fy.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.m_RFT.Fz.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][5] = Wrist.m_RFT.Fz.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.m_RFT.Tx.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][7] = Wrist.m_RFT.Tx.b.lower;
+		}
+		CanDrv[CBC_WRIST].tx.cnt = 8;
+		Wrist.m_can[0].rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
+		if (!Wrist.m_can[0].rv) return;
 
-		CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.FTSensor.Fx.upper;
-		CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.FTSensor.Fx.lower;
-		CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.FTSensor.Fy.upper;
-		CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.FTSensor.Fy.lower;
-		CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.FTSensor.Fz.upper;
-		CanDrv[CBC_WRIST].tx.buf[0][5] = Wrist.FTSensor.Fz.lower;
-		CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.FTSensor.Tx.upper;
-		CanDrv[CBC_WRIST].tx.buf[0][7] = Wrist.FTSensor.Tx.lower;
-		CanDrv[CBC_WRIST].tx.cnt = 8;
-		Wrist.can.rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
-		if (!Wrist.can.rv) return;
-#if 1
-		Wrist.sendOrder++;
-		CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid + Wrist.sendOrder);
+		Wrist.m_sendOrder++;
+		CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.m_can[1].txid + Wrist.m_sendOrder);
 		
-		CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.FTSensor.Ty.upper;
-		CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.FTSensor.Ty.lower;
-		CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.FTSensor.Tz.upper;
-		CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.FTSensor.Tz.lower;
-		
-		if (*Wrist.Enc[0].pValue > 1024) Wrist.Enc[0].value = 1024;
-		else Wrist.Enc[0].value = *Wrist.Enc[0].pValue;
-		
-		if (Wrist.Enc[0].value < 2) { 
-			Wrist.Enc[0].angle = 0; 
+		if (Wrist.m_systemInfo.all) {
+			CanDrv[CBC_WRIST].tx.buf[0][0] = 0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][1] = 0x7f;
+			CanDrv[CBC_WRIST].tx.buf[0][2] = 0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][3] = 0x7f;
+			CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.m_systemInfo.all&0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][5] = Wrist.m_systemInfo.all>>8;
+			CanDrv[CBC_WRIST].tx.buf[0][6] = 0;
+			CanDrv[CBC_WRIST].tx.buf[0][7] = 0;
 		}
 		else {
-			ftemp = (float)(Wrist.Enc[0].value)*0.35+1.25;
-			if (ftemp >= Wrist.Enc[0].offset) {
-				Wrist.Enc[0].angle = (uint16_t)((ftemp-Wrist.Enc[0].offset)*100); 
+			CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.m_RFT.Ty.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.m_RFT.Ty.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.m_RFT.Tz.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.m_RFT.Tz.b.lower;
+			//
+			//cal raw data to angle
+			for (i = 0; i < 2; i++) {
+				if (*Wrist.m_Enc[i].pValue > 1024) Wrist.m_Enc[i].value = 1024;
+				else Wrist.m_Enc[i].value = *Wrist.m_Enc[i].pValue;
+				
+				if (Wrist.m_Enc[i].value < 2) { 
+					Wrist.m_Enc[i].angle = 0; 
+				}
+				else {
+					ftemp = (float)(Wrist.m_Enc[i].value)*0.35+1.25;
+					if (ftemp >= Wrist.m_Enc[i].offset) {
+						Wrist.m_Enc[i].angle = (uint16_t)((ftemp-Wrist.m_Enc[i].offset)*100); 
+					}
+					else {
+						Wrist.m_Enc[i].angle = (uint16_t)((359.65-Wrist.m_Enc[i].offset+ftemp)*100); 
+					}
+				}
 			}
-			else {
-				Wrist.Enc[0].angle = (uint16_t)((359.65-Wrist.Enc[0].offset+ftemp)*100); 
-			}
+			CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.m_Enc[0].angle&0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][5] = (Wrist.m_Enc[0].angle>>8);
+			CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.m_Enc[1].angle&0xff;
+			CanDrv[CBC_WRIST].tx.buf[0][7] = (Wrist.m_Enc[1].angle>>8);
 		}
 		
-		if (*Wrist.Enc[1].pValue > 1024) Wrist.Enc[1].value = 1024;
-		else Wrist.Enc[1].value = *Wrist.Enc[1].pValue;
-		
-		if (Wrist.Enc[1].value < 2) { 
-			Wrist.Enc[1].angle = 0; 
-		}
-		else {
-			ftemp = (float)(Wrist.Enc[1].value)*0.35+1.25;
-			if (ftemp >= Wrist.Enc[1].offset) {
-				Wrist.Enc[1].angle = (uint16_t)((ftemp-Wrist.Enc[1].offset)*100); 
-			}
-			else {
-				Wrist.Enc[1].angle = (uint16_t)((359.65-Wrist.Enc[1].offset+ftemp)*100); 
-			}
-		}
-		CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.Enc[0].angle&0xff;
-		CanDrv[CBC_WRIST].tx.buf[0][5] = (Wrist.Enc[0].angle>>8);
-		CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.Enc[1].angle&0xff;
-		CanDrv[CBC_WRIST].tx.buf[0][7] = (Wrist.Enc[1].angle>>8);
 		CanDrv[CBC_WRIST].tx.cnt = 8;
-		Wrist.can.rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
-		if (!Wrist.can.rv) return;
-#endif		
+		Wrist.m_can[0].rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
+		if (!Wrist.m_can[0].rv) return;
+		
 		//Wrist.sendOrder++;
 		//if (Wrist.sendOrder > 1) Wrist.sendOrder = 0;
 		
-		Wrist.led.canCnt++;
-		if (Wrist.led.canCnt > LED_CAN_TX_BLINK_TIME) {
+		Wrist.m_led.canCnt++;
+		if (Wrist.m_led.canCnt > LED_CAN_TX_BLINK_TIME) {
 			LED_CAN_TX_BLINK;
-			Wrist.led.canCnt = 0;
+			Wrist.m_led.canCnt = 0;
 		}
 		WristTimer.tick = 0;
 	}
 	
-	if (Wrist.can.rv == -1) {
-		if (!Wrist.data.sendTimeBackup) Wrist.data.sendTimeBackup = Wrist.data.sendTime;
-		Wrist.data.sendTime = CAN_ERR_RECHECK_TIME;
+	if (Wrist.m_can[0].rv == -1) {
+		if (!Wrist.m_data.sendTimeBackup) Wrist.m_data.sendTimeBackup = Wrist.m_data.sendTime;
+		Wrist.m_data.sendTime = CAN_ERR_RECHECK_TIME;
 	}
 	else {
-		if (Wrist.data.sendTimeBackup > 0) {
-			Wrist.data.sendTime = Wrist.data.sendTimeBackup;
-			Wrist.data.sendTimeBackup = 0;
+		if (Wrist.m_data.sendTimeBackup > 0) {
+			Wrist.m_data.sendTime = Wrist.m_data.sendTimeBackup;
+			Wrist.m_data.sendTimeBackup = 0;
 		}
 	}
 
@@ -222,14 +235,14 @@ void CWrist_RunMode_Normal(void)
 void CWrist_SetRunMode(uint8_t runmode)
 {
 	//Wrist.sourcePos = 0;
-	Wrist.adc.complete = 0;
+	Wrist.m_adc.complete = 0;
 
-	if (Wrist.runMode == runmode) return;
+	if (Wrist.m_runMode == runmode) return;
 
 	switch (runmode) {
 	case RM_STANDBY:
 	case RM_SLEEP:
-		Wrist.runMode = RM_STANDBY;
+		Wrist.m_runMode = RM_STANDBY;
 		//fnADCDrv_Copy2Buf = ADCDrv_Copy2Buf;
 		fnWrist_RunMode = CWrist_RunMode_Standby;
 		//HAL_ADC_Stop_DMA(&hadc1);
@@ -237,7 +250,7 @@ void CWrist_SetRunMode(uint8_t runmode)
 		LED_CAN_TX_OFF;
 		break;
 	case RM_NORMAL:
-		Wrist.runMode = RM_NORMAL;
+		Wrist.m_runMode = RM_NORMAL;
 		//fnADCDrv_Copy2Buf = ADCDrv_Copy2Buf;
 		fnWrist_RunMode = CWrist_RunMode_Normal;
 		//Wrist_SetBufPtr(Insol.data.size, Insol.sensorONPos);
@@ -246,8 +259,8 @@ void CWrist_SetRunMode(uint8_t runmode)
 		//else CanInfo.tx.cnt = Wrist.sensorONNum<<1;
 		break;
 	case RM_CALIBRATION:
-		Wrist.adc.cnt = 1;		// avg varible
-		Wrist.runMode = RM_CALIBRATION;
+		Wrist.m_adc.cnt = 1;		// avg varible
+		Wrist.m_runMode = RM_CALIBRATION;
 		//fnADCDrv_Copy2Buf = ADCDrv_Copy2CalBuf;
 		fnWrist_RunMode = CWrist_RunMode_Calibration;
 		//HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&AdcDmaBuf[1], NumOfAdcChan );
@@ -256,8 +269,8 @@ void CWrist_SetRunMode(uint8_t runmode)
 		break;
 	}
 	
-	Wrist.oldRunMode = runmode;
-	Wrist.runMode = runmode;
+	Wrist.m_oldRunMode = runmode;
+	Wrist.m_runMode = runmode;
 	
 }
 
@@ -336,8 +349,8 @@ int CWrist_SaveParamToFlash(char *buf)
 	pFSSysInfo->replaceNode = 0;
 	pFSSysInfo->replaceNode = 0x12345678;
 
-	pFSSysInfo->setup.canTxID = Wrist.can.txid;
-	pFSSysInfo->setup.canRxID = Wrist.can.rxid;
+	pFSSysInfo->setup.canTxID = Wrist.m_can[0].txid;
+	pFSSysInfo->setup.canRxID = Wrist.m_can[0].rxid;
 		
 	if (addr >= FLASH_SYSTEM_INFO_ADDR) {
 		pFSSysInfo->writeTime++;
@@ -372,7 +385,87 @@ uint8_t Insol_GetSensorONNum(uint32_t data)
 
 void CWrist_SetEncValuePtr(uint8_t ch, uint16_t *ptr)
 {
-	Wrist.Enc[ch].pValue = ptr;
+	Wrist.m_Enc[ch].pValue = ptr;
+}
+
+void CWrist_FT_StartDataOutput(void)
+{
+	CCANDrv_SetTxStdID(&CanBuf[0].txHeader, Wrist.m_can[0].txid);
+	
+	CanDrv[CBC_FT1].tx.buf[0][0] = CMD_FT_CONT;
+	CanDrv[CBC_FT1].tx.buf[0][1] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][2] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][3] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][4] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][5] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][6] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][7] = 0;
+	CanDrv[CBC_FT1].tx.cnt = 8;
+	Wrist.m_can[1].rv = CCANDrv_WriteFile(CBC_FT1, CanDrv[CBC_FT1].tx.buf[0], CanDrv[CBC_FT1].tx.cnt);
+	//if (!Wrist.can.rv) return;
+
+}
+
+void CWrist_FT_SetBias(uint8_t is_on)
+{
+	CCANDrv_SetTxStdID(&CanBuf[0].txHeader, Wrist.m_can[0].txid);
+	
+	CanDrv[CBC_FT1].tx.buf[0][0] = CMD_SET_BIAS;
+	CanDrv[CBC_FT1].tx.buf[0][1] = is_on;
+	CanDrv[CBC_FT1].tx.buf[0][2] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][3] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][4] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][5] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][6] = 0;
+	CanDrv[CBC_FT1].tx.buf[0][7] = 0;
+	CanDrv[CBC_FT1].tx.cnt = 8;
+	Wrist.m_can[1].rv = CCANDrv_WriteFile(CBC_FT1, CanDrv[CBC_FT1].tx.buf[0], CanDrv[CBC_FT1].tx.cnt);
+	//if (!Wrist.can.rv) return;
+
+}
+
+void CWrist_ProcessCANData(uint8_t node, unsigned char *buf)
+{
+	float ftemp;
+	int16_t temp;
+	
+	if (node < CBC_WRIST) {
+		if (node == CBC_FT1) {
+			if (buf[0] == CMD_FT_CONT) {
+				temp = buf[1]<<8|buf[2];
+				ftemp = (float)temp / Wrist.m_RFT.forceDivider;
+				Wrist.m_RFT.Fx.all = (int16_t)(ftemp*100);
+				temp = buf[3]<<8|buf[4];
+				ftemp = (float)temp / Wrist.m_RFT.forceDivider;
+				Wrist.m_RFT.Fy.all = (int16_t)(ftemp*100);
+				temp = buf[5]<<8|buf[6];
+				ftemp = (float)temp / Wrist.m_RFT.forceDivider;
+				Wrist.m_RFT.Fz.all = (int16_t)(ftemp*100);
+				Wrist.m_RFT.tmpSaveTorqueUpperData = buf[7];
+				Wrist.m_RFT.fReceiveDataMark = 1;
+			}
+		}
+		else if (node == CBC_FT2) {
+			if (Wrist.m_RFT.fReceiveDataMark == 1) {
+				temp = Wrist.m_RFT.tmpSaveTorqueUpperData<<8|buf[0];
+				ftemp = (float)temp / Wrist.m_RFT.torqueDivider;
+				Wrist.m_RFT.Tx.all = (int16_t)(ftemp*100);
+				temp = buf[1]<<8|buf[2];
+				ftemp = (float)temp / Wrist.m_RFT.torqueDivider;
+				Wrist.m_RFT.Ty.all = (int16_t)(ftemp*100);
+				temp = buf[3]<<8|buf[4];
+				ftemp = (float)temp / Wrist.m_RFT.torqueDivider;
+				Wrist.m_RFT.Tz.all = (int16_t)(ftemp*100);
+				//Wrist.m_RFT.statusOfOverload = buf[5];
+				if (buf[5] == 0x08) Wrist.m_systemInfo.b.rftOverload = 1;
+				else Wrist.m_systemInfo.b.rftOverload = 0;
+			}
+			Wrist.m_RFT.fReceiveDataMark = 0;
+		}
+	}
+	else {
+		CANOpen_ProcessSdo(node, buf);
+	}
 }
 
 void CWrist_Print2Uart_SystemInfo(void)
@@ -381,14 +474,14 @@ void CWrist_Print2Uart_SystemInfo(void)
 	
 	if (CWrist_LoadParamFromFlash(CommonBuf)) {
 		psi = (SYSTEM_INFO *)CommonBuf;
-		if (psi->setup.canTxID < 0x1FFFFFFF) Wrist.can.txid = psi->setup.canTxID;
-		if (psi->setup.canRxID < 0x1FFFFFFF) Wrist.can.rxid = psi->setup.canRxID;
+		if (psi->setup.canTxID < 0x1FFFFFFF) Wrist.m_can[0].txid = psi->setup.canTxID;
+		if (psi->setup.canRxID < 0x1FFFFFFF) Wrist.m_can[0].rxid = psi->setup.canRxID;
 	}
 	
 	printf("------- HEXAR SYSTEMS -------\r\n");
 	printf("F/W Version : %d.%d\r\n", (FW_VER&0x0)>>4, FW_VER&0x0f);
 	printf("User : %c\r\n", FW_USER);
-	printf("CAN ID : Tx : %Xh, Rx : %Xh\r\n", Wrist.can.txid, Wrist.can.rxid);
+	printf("CAN ID : Tx : %Xh, Rx : %Xh\r\n", Wrist.m_can[0].txid, Wrist.m_can[0].rxid);
 	printf("Create date : %d/%d/%d %d:%d\r\n", 
 		FW_CREATE_YEAR, FW_CREATE_MONTH, FW_CREATE_DAY, 
 		FW_CREATE_HOUR, FW_CREATE_MIN);
@@ -402,26 +495,30 @@ void CWrist_Init(void)
 	//LED_ADC_RUN_BLINK;
 	//LED_CAN_TX_BLINK;
 
-	Wrist.sendOrder = 0;
-	Wrist.led.adcCnt = 0;
-	Wrist.led.canCnt = 0;
-	Wrist.data.sendTime = 21;
-	Wrist.data.sendTimeBackup = 0;
+	Wrist.m_sendOrder = 0;
+	Wrist.m_led.adcCnt = 0;
+	Wrist.m_led.canCnt = 0;
+	Wrist.m_data.sendTime = 20;
+	Wrist.m_data.sendTimeBackup = 0;
 	fnWrist_RunMode = CWrist_RunMode_Standby;
-	CCANDrv_SetISRFn(CANOpen_ProcessSdo);
-	Wrist.runMode = Wrist.oldRunMode = RM_STANDBY;
+	CCANDrv_SetISRFn(CWrist_ProcessCANData);
+	Wrist.m_runMode = Wrist.m_oldRunMode = RM_STANDBY;
 	#ifdef SUPPORT_UART_PRINT
 	Wrist.data.outputType = DOT_UART;
 	#else
-	Wrist.data.outputType = DOT_CAN;
+	Wrist.m_data.outputType = DOT_CAN;
 	#endif
-	Wrist.Enc[0].offset = 0;
-	Wrist.Enc[1].offset = 0;
+	Wrist.m_Enc[0].offset = 0;
+	Wrist.m_Enc[1].offset = 0;
+	Wrist.m_RFT.forceDivider = FORCE_DIVIDER;
+	Wrist.m_RFT.torqueDivider = TORQUE_DIVIDER;
+	Wrist.m_RFT.fReceiveDataMark = 0;
 
 	CCANDrv_SetID(CBC_FT1, SID_R_FT1);
 	CCANDrv_SetID(CBC_FT2, SID_R_FT2);
 	CCANDrv_SetID(CBC_WRIST, SID_R_WRIST);
-	Wrist.can.txid = SID_T_WRIST;
+	Wrist.m_can[1].txid = SID_T_WRIST;
+	Wrist.m_can[0].txid = SID_T_FT;
 
 	//LED_ADC_RUN_OFF;
 	LED_CAN_TX_OFF;
@@ -430,6 +527,10 @@ void CWrist_Init(void)
 	FlashDrv_SetTempBuf(&CommonBuf[FLASH_PAGE_SIZE1]);
 	FlashDrv_SetParam(FLASH_PAGE_SIZE1);
 #endif
+
+	//CWrist_FT_StartDataOutput();
+	//CWrist_FT_SetBias(0);
+
 }
 
 #if 0

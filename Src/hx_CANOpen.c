@@ -34,6 +34,7 @@ source
 #include "hx_CANDrv.h"
 #include "hx_mcuFlash.h"
 #include "CanOpenDef.h"
+#include "RFT_IF_PACKET_Rev1.2.h"
 
 /* Private define ------------------------------------------------------------*/
 
@@ -61,11 +62,11 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 {
 	uint8_t buf[5];
 	uint8_t cnt;
-	float ftemp;
+	//float ftemp;
 
 	cnt = 0;
 
-	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid);
+	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.m_can[1].txid);
 	
 	switch (pCoc->m_subinx) {
 	//case CAN_OPEN_CONTROL_SHUTDOWN:
@@ -103,8 +104,8 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		}
 		break;
 	case CAN_OPEN_SET_INTERVAL_SEND_DATA:
-		Wrist.data.sendTime = (pCoc->data[1]<<8) | pCoc->data[0];
-		if (Wrist.data.sendTime < 1) Wrist.data.sendTime = 5;
+		Wrist.m_data.sendTime = (pCoc->data[1]<<8) | pCoc->data[0];
+		if (Wrist.m_data.sendTime < 1) Wrist.m_data.sendTime = 5;
 		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
@@ -124,8 +125,8 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_SET_DEVICE_NUM:
-		Wrist.can.txid = SID_T_WRIST + pCoc->data[0];
-		Wrist.can.rxid = SID_R_WRIST + pCoc->data[0];
+		Wrist.m_can[0].txid = SID_T_WRIST + pCoc->data[0];
+		Wrist.m_can[0].rxid = SID_R_WRIST + pCoc->data[0];
 		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;;
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
@@ -136,7 +137,7 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
 	case CAN_OPEN_SET_DATA_OUTPUT_TYPE:
-		Wrist.data.outputType = pCoc->data[0];
+		Wrist.m_data.outputType = pCoc->data[0];
 		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
@@ -148,7 +149,7 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 	case CAN_OPEN_SET_DATA_SIZE:
 		//Wrist.data.size = pCoc->data[0];
 		//Wrist.data.shift = pCoc->data[1];
-		if (Wrist.runMode > RM_SLEEP && Wrist.runMode < RM_MAX) {
+		if (Wrist.m_runMode > RM_SLEEP && Wrist.m_runMode < RM_MAX) {
 			CWrist_SetRunMode(RM_NORMAL);
 		}
 		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
@@ -172,6 +173,26 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 		//cnt = 8;
 		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
+	case CAN_OPEN_FT_START_DATA_OUTPUT:
+		CWrist_FT_StartDataOutput();
+		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
+		buf[cnt++] = (uint8_t)CAN_OPEN_FT_START_DATA_OUTPUT;
+		buf[cnt++] = 0;
+		//cnt = 5;
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);		
+		break;
+	case CAN_OPEN_FT_SET_BIAS:
+		CWrist_FT_SetBias(pCoc->data[0]);
+		buf[cnt++] = SDO_UPLOAD_RESPONSE|SDO_SIZE_BYTE;
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
+		buf[cnt++] = (uint8_t)CAN_OPEN_FT_SET_BIAS;
+		buf[cnt++] = 0;
+		//cnt = 5;
+		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);		
+		break;
 	default:
 		break;
 	}
@@ -179,11 +200,11 @@ void CANOpen_Control(uint8_t node, CanOpenCommand *pCoc)
 
 void CANOpen_Status(uint8_t node, CanOpenCommand *pCoc)
 {
-	uint8_t buf[8];
-	uint8_t cnt;
+	//uint8_t buf[8];
+	//uint8_t cnt;
 
-	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid);
- 	cnt = 0;
+	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.m_can[0].txid);
+ 	//cnt = 0;
 	switch (pCoc->m_subinx) {
 	case CAN_OPEN_GET_STATUS:
 		break;
@@ -203,10 +224,11 @@ void CANOpen_Etc(uint8_t node, CanOpenCommand *pCoc)
 	uint8_t buf[5];
 	uint8_t cnt;
 	float ftemp;
+	uint16_t temp;
 
 	cnt = 0;
 
-	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.can.txid);
+	CCANDrv_SetTxStdID(&CanBuf[1].txHeader, Wrist.m_can[0].txid);
 	
 	switch (pCoc->m_inx) {
 	case CIA_402_POSITION_OFFSET:
@@ -215,10 +237,10 @@ void CANOpen_Etc(uint8_t node, CanOpenCommand *pCoc)
 		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_SET_DATA_OUTPUT_TYPE;
 		if (pCoc->m_subinx < 2) {
-			if (*Wrist.Enc[pCoc->m_subinx].pValue > 1024) Wrist.Enc[pCoc->m_subinx].value = 1024;
-			else Wrist.Enc[pCoc->m_subinx].value = *Wrist.Enc[pCoc->m_subinx].pValue;
+			if (*Wrist.m_Enc[pCoc->m_subinx].pValue > 1024) Wrist.m_Enc[pCoc->m_subinx].value = 1024;
+			else Wrist.m_Enc[pCoc->m_subinx].value = *Wrist.m_Enc[pCoc->m_subinx].pValue;
 			ftemp = ((pCoc->data[1]<<8)+pCoc->data[0])/100.0;
-			Wrist.Enc[pCoc->m_subinx].offset = (((float)(Wrist.Enc[pCoc->m_subinx].value))*0.35+1.25) - ftemp;			
+			Wrist.m_Enc[pCoc->m_subinx].offset = (((float)(Wrist.m_Enc[pCoc->m_subinx].value))*0.35+1.25) - ftemp;			
 			buf[cnt++] = 0;
 		}
 		else {
@@ -227,6 +249,11 @@ void CANOpen_Etc(uint8_t node, CanOpenCommand *pCoc)
 		//cnt = 5;
 		CCANDrv_WriteFile(CBC_WRIST, buf, cnt+1);
 		break;
+	case 0x6064://CAN_OPEN_ACTUAL_POSITION:
+		temp = Wrist.m_data.sendTime;
+		Wrist.m_data.sendTime = 0;
+		CWrist_RunMode_Normal();
+		Wrist.m_data.sendTime = temp;
 	default:
 		break;
 	}
@@ -237,43 +264,23 @@ void CANOpen_ProcessSdo(uint8_t node, unsigned char *buf)
 	CanOpenCommand *pCoc;
 	//int i;
 
-	if (node < CBC_WRIST) {
-		if (node == CBC_FT1) {
-			Wrist.FTSensor.Fx.upper = buf[1];
-			Wrist.FTSensor.Fx.lower = buf[2];
-			Wrist.FTSensor.Fy.upper = buf[3];
-			Wrist.FTSensor.Fy.lower = buf[4];
-			Wrist.FTSensor.Fz.upper = buf[5];
-			Wrist.FTSensor.Fz.lower = buf[6];
-			Wrist.FTSensor.Tx.upper = buf[7];
-		}
-		else if (node == CBC_FT2) {
-			Wrist.FTSensor.Tx.lower = buf[0];
-			Wrist.FTSensor.Ty.upper = buf[1];
-			Wrist.FTSensor.Ty.lower = buf[2];
-			Wrist.FTSensor.Tz.upper = buf[3];
-			Wrist.FTSensor.Tz.lower = buf[4];
-			Wrist.FTSensor.statusOfOverload = buf[5];
-		}
+
+	//if (CanDrv[i].rx.head == CanDrv[i].rx.tail) continue;
+	
+	pCoc = (CanOpenCommand *)buf;//&CanDrv[i].rx.pbuf[CanDrv[i].rx.tail];
+	if (pCoc->m_inx == CANOpen_GetIndex(CAN_OPEN_CONTROL)) {
+		CANOpen_Control(node, pCoc);
+	}
+	else if (pCoc->m_inx == CANOpen_GetIndex(CAN_OPEN_STATUS)) {
+		CANOpen_Status(node, pCoc);
 	}
 	else {
-		//if (CanDrv[i].rx.head == CanDrv[i].rx.tail) continue;
-		
-		pCoc = (CanOpenCommand *)buf;//&CanDrv[i].rx.pbuf[CanDrv[i].rx.tail];
-		if (pCoc->m_inx == CANOpen_GetIndex(CAN_OPEN_CONTROL)) {
-			CANOpen_Control(node, pCoc);
-		}
-		else if (pCoc->m_inx == CANOpen_GetIndex(CAN_OPEN_STATUS)) {
-			CANOpen_Status(node, pCoc);
-		}
-		else {
-			//CANOpen_Ack(node, pCoc);
-			CANOpen_Etc(node, pCoc);
-		}
-		//CanDrv[i].rx.tail++;
-		//if (CanDrv[i].rx.tail >= CAN_RX_BUF_NUM) 
-		//	CanDrv[i].rx.tail = 0;
+		//CANOpen_Ack(node, pCoc);
+		CANOpen_Etc(node, pCoc);
 	}
+	//CanDrv[i].rx.tail++;
+	//if (CanDrv[i].rx.tail >= CAN_RX_BUF_NUM) 
+	//	CanDrv[i].rx.tail = 0;
 
 }
 

@@ -133,7 +133,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huart)
 {
-	Wrist.led.adcCnt++;
+	Wrist.m_led.adcCnt++;
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
@@ -143,7 +143,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	if (hadc->Instance == ADC1 || hadc->Instance == ADC2) {
 	}
 	//HAL_ADC_Stop_DMA(&hadc1);
-	Wrist.led.adcCnt++;
+	Wrist.m_led.adcCnt++;
 	//fnADCDrv_Copy2Buf();
 	//Wrist.adc.complete = 1;
 	//ADCDrv_SelectSensorSource();
@@ -183,7 +183,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 void HAL_CAN_TxCpltCallback(FDCAN_HandleTypeDef* hfdcan)
 {
 	if (hfdcan->Instance == FDCAN1) {
-		if (hfdcan->State == HAL_FDCAN_STATE_READY) Wrist.can.complete = 1;
+		if (hfdcan->State == HAL_FDCAN_STATE_READY) Wrist.m_can[1].complete = 1;
 	}
 }
 

@@ -278,7 +278,7 @@ void CCANDrv_CAN1Init(void)
 	FDCAN_FilterTypeDef sFilterConfig;
 
 	fifo0RxNum = 1;
-	CanBuf[0].fifo0TxNum = 0;
+	CanBuf[0].fifo0TxNum = 1;
 	/*                Bit time configuration:
 	Bit time parameter         | Nominal      |  Data
 	---------------------------|--------------|----------------
@@ -292,21 +292,20 @@ void CCANDrv_CAN1Init(void)
 	Bit_length                 | 8 tq = 8 µs | 8 tq = 8 µs
 	Bit_rate                     | 1 MBit/s      | 1 MBit/s
 	*/
-	hfdcan1.State = HAL_FDCAN_STATE_RESET;
 	hfdcan1.Instance = FDCAN1;
-	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;//FDCAN_FRAME_FD_BRS;
+	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
 	hfdcan1.Init.AutoRetransmission = ENABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = ENABLE;
-	hfdcan1.Init.NominalPrescaler = 0x1; /* tq = NominalPrescaler x (1/fdcan_ker_ck) */
-	hfdcan1.Init.NominalSyncJumpWidth = 1;//0x10;//0x8;
-	hfdcan1.Init.NominalTimeSeg1 = 0x3F; /* NominalTimeSeg1 = Propagation_segment + Phase_segment_1 */
-	hfdcan1.Init.NominalTimeSeg2 = 0x10;
-	hfdcan1.Init.DataPrescaler = 0x1;
-	hfdcan1.Init.DataSyncJumpWidth = 0x10;//0x8;
-	hfdcan1.Init.DataTimeSeg1 = 0x3F; /* DataTimeSeg1 = Propagation_segment + Phase_segment_1 */
-//	hfdcan1.Init.DataTimeSeg2 = 0x10;
+	hfdcan1.Init.NominalPrescaler = 10;//0x1; /* tq = NominalPrescaler x (1/fdcan_ker_ck) */
+	hfdcan1.Init.NominalSyncJumpWidth = 1;//0x8;
+	hfdcan1.Init.NominalTimeSeg1 = 14;//32;//0x3; /* NominalTimeSeg1 = Propagation_segment + Phase_segment_1 */
+	hfdcan1.Init.NominalTimeSeg2 = 2;//9;//52;//0xC;
+	hfdcan1.Init.DataPrescaler = 10;//2;//0x1;
+	hfdcan1.Init.DataSyncJumpWidth = 1;//0x8;
+	hfdcan1.Init.DataTimeSeg1 = 14;//32;//0x2; /* DataTimeSeg1 = Propagation_segment + Phase_segment_1 */
+	hfdcan1.Init.DataTimeSeg2 = 2;//9;//52;//0x1;
 //	hfdcan1.Init.MessageRAMOffset = 0;
 	hfdcan1.Init.StdFiltersNbr = 1;
 	hfdcan1.Init.ExtFiltersNbr = 0;
@@ -338,7 +337,7 @@ void CCANDrv_CAN1Init(void)
 	HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, CanBuf[0].fifo0TxNum);
 
 	/* Prepare Tx Header */
-	CanBuf[0].txHeader.Identifier = 0x581;
+	CanBuf[0].txHeader.Identifier = 0x64;
 	CanBuf[0].txHeader.IdType = FDCAN_STANDARD_ID;
 	CanBuf[0].txHeader.TxFrameType = FDCAN_DATA_FRAME;
 	CanBuf[0].txHeader.DataLength = FDCAN_DLC_BYTES_8;
@@ -359,6 +358,7 @@ void CCANDrv_CAN2Init(void)
 	FDCAN_FilterTypeDef sFilterConfig;
 
 	fifo0Num = 1;
+	CanBuf[1].fifo0TxNum = 1;
 	/*                Bit time configuration:
 	Bit time parameter         | Nominal      |  Data
 	---------------------------|--------------|----------------
@@ -416,7 +416,7 @@ void CCANDrv_CAN2Init(void)
 	HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, CanBuf[1].fifo0TxNum);
 
 	/* Prepare Tx Header */
-	CanBuf[1].txHeader.Identifier = 0x581;
+	CanBuf[1].txHeader.Identifier = 0x5A1;
 	CanBuf[1].txHeader.IdType = FDCAN_STANDARD_ID;
 	CanBuf[1].txHeader.TxFrameType = FDCAN_DATA_FRAME;
 	CanBuf[1].txHeader.DataLength = FDCAN_DLC_BYTES_8;
