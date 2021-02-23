@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 /* Private define ------------------------------------------------------------*/
-#define CAN_PORT_CNT							3
+#define CAN_PORT_CNT							2
 #define CAN_RX_BUF_NUM							(10)
 #define CAN_TX_BUF_NUM							(1)
 #define CAN_TX_ERR_CNT							3

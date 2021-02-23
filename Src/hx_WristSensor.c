@@ -143,14 +143,14 @@ void CWrist_RunMode_Normal(void)
 			CanDrv[CBC_WRIST].tx.buf[0][7] = 0;
 		}
 		else {
-			CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.m_RFT.Fx.b.upper;
-			CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.m_RFT.Fx.b.lower;
-			CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.m_RFT.Fy.b.upper;
-			CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.m_RFT.Fy.b.lower;
-			CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.m_RFT.Fz.b.upper;
-			CanDrv[CBC_WRIST].tx.buf[0][5] = Wrist.m_RFT.Fz.b.lower;
-			CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.m_RFT.Tx.b.upper;
-			CanDrv[CBC_WRIST].tx.buf[0][7] = Wrist.m_RFT.Tx.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.m_RFT.Fx.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.m_RFT.Fx.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.m_RFT.Fy.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.m_RFT.Fy.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.m_RFT.Fz.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][5] = Wrist.m_RFT.Fz.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][6] = Wrist.m_RFT.Tx.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][7] = Wrist.m_RFT.Tx.b.upper;
 		}
 		CanDrv[CBC_WRIST].tx.cnt = 8;
 		Wrist.m_can[0].rv = CCANDrv_WriteFile(CBC_WRIST, CanDrv[CBC_WRIST].tx.buf[0], CanDrv[CBC_WRIST].tx.cnt);
@@ -170,10 +170,10 @@ void CWrist_RunMode_Normal(void)
 			CanDrv[CBC_WRIST].tx.buf[0][7] = 0;
 		}
 		else {
-			CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.m_RFT.Ty.b.upper;
-			CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.m_RFT.Ty.b.lower;
-			CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.m_RFT.Tz.b.upper;
-			CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.m_RFT.Tz.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][0] = Wrist.m_RFT.Ty.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][1] = Wrist.m_RFT.Ty.b.upper;
+			CanDrv[CBC_WRIST].tx.buf[0][2] = Wrist.m_RFT.Tz.b.lower;
+			CanDrv[CBC_WRIST].tx.buf[0][3] = Wrist.m_RFT.Tz.b.upper;
 			//
 			//cal raw data to angle
 			for (i = 0; i < 2; i++) {
