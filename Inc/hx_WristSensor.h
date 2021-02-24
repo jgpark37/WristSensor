@@ -163,7 +163,7 @@ typedef struct tag_WRIST{
 	struct {
 		uint16_t *pValue;
 		uint16_t value;
-		float offset;
+		int32_t offset;
 		uint16_t angle; //x100
 	}m_Enc[2];
 	struct {

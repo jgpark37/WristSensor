@@ -223,7 +223,7 @@ void CANOpen_Etc(uint8_t node, CanOpenCommand *pCoc)
 {
 	uint8_t buf[5];
 	uint8_t cnt;
-	float ftemp;
+	//float ftemp;
 	uint16_t temp;
 
 	cnt = 0;
@@ -239,8 +239,8 @@ void CANOpen_Etc(uint8_t node, CanOpenCommand *pCoc)
 		if (pCoc->m_subinx < 2) {
 			if (*Wrist.m_Enc[pCoc->m_subinx].pValue > 1024) Wrist.m_Enc[pCoc->m_subinx].value = 1024;
 			else Wrist.m_Enc[pCoc->m_subinx].value = *Wrist.m_Enc[pCoc->m_subinx].pValue;
-			ftemp = ((pCoc->data[1]<<8)+pCoc->data[0])/100.0;
-			Wrist.m_Enc[pCoc->m_subinx].offset = (((float)(Wrist.m_Enc[pCoc->m_subinx].value))*0.35+1.25) - ftemp;			
+			temp = (pCoc->data[1]<<8)+pCoc->data[0];
+			Wrist.m_Enc[pCoc->m_subinx].offset = (int32_t)(((Wrist.m_Enc[pCoc->m_subinx].value*35)+125) - temp);			
 			buf[cnt++] = 0;
 		}
 		else {

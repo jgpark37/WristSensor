@@ -101,7 +101,8 @@ void CWrist_RunMode_Normal(void)
 {
 	int i;//, j;
 	//int16_t temp;
-	float ftemp;
+	//float ftemp;
+	int32_t temp;
 
   	//if (Wrist.adc.complete == 0) return;
 
@@ -181,16 +182,19 @@ void CWrist_RunMode_Normal(void)
 				else Wrist.m_Enc[i].value = *Wrist.m_Enc[i].pValue;
 				
 				if (Wrist.m_Enc[i].value < 2) { 
-					Wrist.m_Enc[i].angle = 0; 
+					//Wrist.m_Enc[i].angle = 0; 
+					temp = 0;//0*35+125;
 				}
 				else {
-					ftemp = (float)(Wrist.m_Enc[i].value)*0.35+1.25;
-					if (ftemp >= Wrist.m_Enc[i].offset) {
-						Wrist.m_Enc[i].angle = (uint16_t)((ftemp-Wrist.m_Enc[i].offset)*100); 
-					}
-					else {
-						Wrist.m_Enc[i].angle = (uint16_t)((359.65-Wrist.m_Enc[i].offset+ftemp)*100); 
-					}
+				  	//cal to angle from pulse width value
+					temp = Wrist.m_Enc[i].value*35+125;
+				}
+				
+				if (temp >= Wrist.m_Enc[i].offset) {
+					Wrist.m_Enc[i].angle = (uint16_t)(temp-Wrist.m_Enc[i].offset); 
+				}
+				else {
+					Wrist.m_Enc[i].angle = (uint16_t)((35965-Wrist.m_Enc[i].offset)+temp); 
 				}
 			}
 			CanDrv[CBC_WRIST].tx.buf[0][4] = Wrist.m_Enc[0].angle&0xff;

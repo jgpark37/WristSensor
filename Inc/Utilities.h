@@ -38,8 +38,8 @@
 //***********************************************
 
 //===========================================================================================================
-#define SID_R_WRIST_BASE		0x629
-#define SID_T_WRIST_BASE		0x5A9
+#define SID_R_WRIST_BASE		0x621
+#define SID_T_WRIST_BASE		0x5A1
 #define WRIST1_NODE				0
 
 #define SID_R_FT_BASE			0x01
