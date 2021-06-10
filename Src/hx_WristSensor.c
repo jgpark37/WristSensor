@@ -126,10 +126,6 @@ void CWrist_RunMode_Normal(void)
 	}
 #endif
 	
-#ifdef SUPPORT_BOARD_TEST_MODE
-		CWrist_FT_StartDataOutput();
-#endif
-
 	Wrist.m_can[0].rv = 0;
 	if (Wrist.m_data.outputType&DOT_CAN) {
 		//if (Insol.can.complete > 0) Insol.can.complete--;    
@@ -537,7 +533,7 @@ void CWrist_Init(void)
 #endif
 
 #ifdef SUPPORT_BOARD_TEST_MODE
-	//CWrist_FT_StartDataOutput();
+	CWrist_FT_StartDataOutput();
 	CWrist_FT_SetBias(0);
 #endif
 

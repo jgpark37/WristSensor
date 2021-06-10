@@ -35,7 +35,7 @@
 //#define SUPPORT_HW_V1_2				//180408
 //#define SUPPORT_UART_PRINT
 //#define SUPPORT_ALL_SENSOR
-#define SUPPORT_BOARD_TEST_MODE
+//#define SUPPORT_BOARD_TEST_MODE
 
 //#define CAN_RX_BUF_NUM				(20)
 //#define CAN_TX_BUF_NUM				(21)
