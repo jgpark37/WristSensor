@@ -25,8 +25,8 @@
 *
 */
 
-#ifndef _INSOL_SENSOR_H_
-#define _INSOL_SENSOR_H_
+#ifndef _WRIST_SENSOR_H_
+#define _WRIST_SENSOR_H_
 
 /* Includes ------------------------------------------------------------------*/
 //#include "stm32f4xx.h"
@@ -35,6 +35,7 @@
 //#define SUPPORT_HW_V1_2				//180408
 //#define SUPPORT_UART_PRINT
 //#define SUPPORT_ALL_SENSOR
+#define SUPPORT_BOARD_TEST_MODE
 
 //#define CAN_RX_BUF_NUM				(20)
 //#define CAN_TX_BUF_NUM				(21)
@@ -262,5 +263,5 @@ extern void CWrist_FT_StartDataOutput(void);
 extern void CWrist_FT_SetBias(uint8_t is_on);
 
 
-#endif //_INSOL_SENSOR_H_
+#endif //_WRIST_SENSOR_H_
 

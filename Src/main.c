@@ -319,10 +319,12 @@ int main(void)
   CWrist_SetEncValuePtr(0, &capture22[0]);
   CWrist_SetEncValuePtr(1, &capture82[0]);
   //CWrist_RunMode_Calibration();
-  //#ifdef SUPPORT_UART_PRINT
-  //CWrist_SetRunMode(RM_STANDBY);
-   //#endif
-//  CWrist_Print2Uart_SystemInfo();
+#ifdef SUPPORT_UART_PRINT
+	CWrist_Print2Uart_SystemInfo();
+#endif
+#ifdef SUPPORT_BOARD_TEST_MODE
+ 	CWrist_SetRunMode(RM_NORMAL);
+#endif
 
   /* USER CODE END 2 */
 
